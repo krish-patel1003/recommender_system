@@ -1,0 +1,58 @@
+DB outline
+
+User
+- username
+- password
+
+Actor
+- name
+
+tags
+- title
+
+Movie
+- name
+- actor (ManytoMany)
+- tags (ManytoMany)
+
+Ratings
+- user (Foreign Key)
+- movie (Foreign Key)
+- rating 
+
+
+APIs
+
+Users
+ - POST - auth/register
+ - POST - auth/login
+
+
+movies (Only admin can POST/PATCH/DELETE movies) (GET method is allowed to all)
+ - POST - /movies/add
+ - GET - /movies
+ - GET - /movies/<movie_id:int>
+ - PATCH - /movies/<movie_id:int>
+ - DELETE - /movies/<movie_id:int>
+ - GET - /movies/recommend (will recommend movies for logged in user)
+
+
+Ratings
+ - POST - /rating/:movie_id&:rating
+ - GET - /rating/:
+
+
+Recommender Simulation
+[will show all calculations including, matrices, MSD and agregation]
+ - GET - /knn/:username (knn oriented towards users) 
+ - GET - /knn/:movie_id (knn oriented towards items) 
+
+
+Optimization
+Caching - knn matrices, and similarity scores.
+Query Optmization - Querying for particular movies rated by users.
+
+
+SEO 
+
+
