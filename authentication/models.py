@@ -1,5 +1,7 @@
+from typing import Iterable
 from django.db import models
-from django.contrib.auth.models import AbstractUser, BaseUserManager, PermissionsMixin
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
+from rest_framework.authtoken.models import Token
 
 
 class CustomUserManager(BaseUserManager):
@@ -7,7 +9,7 @@ class CustomUserManager(BaseUserManager):
     def __create(self, username, password, **extra_fields):
         if not username:
             raise ValueError('The username must be set')
-        user = self.model(username=username, **extra_fields)
+        user = self.model(username=username, password=password,**extra_fields)
         user.set_password(password)
         user.save(using=self._db)
         return user
@@ -25,7 +27,7 @@ class CustomUserManager(BaseUserManager):
         extra_fields.setdefault('is_admin', True)
         return self.__create(username, password, **extra_fields)
 
-class CustomUser(AbstractUser, PermissionsMixin):
+class CustomUser(AbstractBaseUser, PermissionsMixin):
 
     username = models.CharField(max_length=50, unique=True, null=False, db_index=True)
     is_admin = models.BooleanField(default=False)
@@ -40,5 +42,3 @@ class CustomUser(AbstractUser, PermissionsMixin):
 
     def __str__(self):
         return self.username
-    
-
