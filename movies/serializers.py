@@ -38,3 +38,5 @@ class RatingSerializer(serializers.ModelSerializer):
         model = Rating
         fields = '__all__'
     
+    
+    
