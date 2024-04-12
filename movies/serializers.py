@@ -16,6 +16,10 @@ class TagSerializer(serializers.ModelSerializer):
 
 
 class MovieSerializer(serializers.ModelSerializer):
+
+    actors = ActorSerializer(many=True)
+    tags = TagSerializer(many=True)
+
     class Meta:
         model = Movie
         fields = '__all__'

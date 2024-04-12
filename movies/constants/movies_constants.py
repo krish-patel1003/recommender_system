@@ -1,4 +1,7 @@
 class MoviesConstants:
+
+    K_NEIGHBORS = 5
+
     MOVIE_NAMES = [
         "The Shawshank Redemption",
         "The Godfather",

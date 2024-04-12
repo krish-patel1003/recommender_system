@@ -12,7 +12,7 @@ class Command(BaseCommand):
         fake = Faker()
         for _ in tqdm.tqdm(range(20)):
             username = fake.user_name()
-            password = fake.password()
+            password = username
 
             CustomUser.objects.create_user(username=username, password=password)
         self.stdout.write(self.style.SUCCESS(f"User {username} created successfully"))

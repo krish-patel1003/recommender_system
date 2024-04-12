@@ -42,7 +42,7 @@ Ratings
  - GET - /rating/:
 
 
-Recommender Simulation
+Recommender Simulation (Done)
 [will show all calculations including, matrices, MSD and agregation]
  - GET - /knn/:username (knn oriented towards users) 
  - GET - /knn/:movie_id (knn oriented towards items) 
