@@ -2,6 +2,20 @@ from typing import Iterable
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from rest_framework.authtoken.models import Token
+from django.core.cache import cache
+
+
+class CustomUserQuerySet(models.QuerySet):
+
+    def all(self):
+        cache_key = 'all_users'
+        users = cache.get(cache_key)
+
+        if users is None:
+            users = list(super().all())
+            cache.set(cache_key, users, timeout=60*60*24)
+        
+        return users
 
 
 class CustomUserManager(BaseUserManager):
@@ -20,12 +34,18 @@ class CustomUserManager(BaseUserManager):
         extra_fields.setdefault('is_superuser', False)
         return self.__create(username, password, **extra_fields)
     
+
     def create_superuser(self, username, password=None, **extra_fields):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_active', True)
         extra_fields.setdefault('is_superuser', True)
         extra_fields.setdefault('is_admin', True)
         return self.__create(username, password, **extra_fields)
+    
+
+    def get_queryset(self):
+        return CustomUserQuerySet(self.model, using=self._db)
+    
 
 class CustomUser(AbstractBaseUser, PermissionsMixin):
 
@@ -42,3 +62,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return f"{self.id} - {self.username}"
+    
+    def save(self, *args, **kwargs):
+        cache.delete('all_posts')
+        super().save(*args, **kwargs)

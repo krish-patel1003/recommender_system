@@ -31,7 +31,7 @@ SECRET_KEY = 'django-insecure-gl)&^6v2&(zvi#5q9@2z2j_m%em@15__-tbvz_0m^trmp(-!d^
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
@@ -147,4 +147,12 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ],
+}
+
+
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": "rediss://red-cocpmv21hbls73cvni20:TdFvJL1A3rm9NUgPn28aKjzxXRfc50xK@singapore-redis.render.com:6379",
+    }
 }

@@ -17,19 +17,7 @@ class Recommender:
 
         return user_ratings
 
-    def get_unrated_movies(self, user):
-        # Get all movies
-        movies = Movie.objects.all()
-
-        # Get all ratings of the user
-        user_ratings = Rating.objects.filter(user=user)
-
-        # Get unrated movies
-        unrated_movies = movies.exclude(rating__in=user_ratings)
-
-        return unrated_movies
-     
-    def generate_matrix(self): 
+def generate_matrix(self): 
         # Create a matrix of users and movies
         matrix = np.zeros((self.users.last().id+1, self.movies.last().id+1))
 

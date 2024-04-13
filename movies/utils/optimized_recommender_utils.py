@@ -3,32 +3,22 @@ from authentication.models import CustomUser
 import numpy as np
 from movies.constants import MoviesConstants
 from movies.serializers import MovieSerializer
-
+from django.core.cache import cache
 
 class Recommender:
 
     def __init__(self):
         self.movies = Movie.objects.all()
         self.users = CustomUser.objects.all()
+        self.matrix_cached = self.check_cache('matrix')  
 
     def get_rated_movies(self, user):
         # Get all ratings of the user
-        user_ratings = Rating.objects.filter(user=user)
+        # Fucntion changed to filter_by_user
+        user_ratings = Rating.objects.filter_by_user(user=user)
 
         return user_ratings
 
-    def get_unrated_movies(self, user):
-        # Get all movies
-        movies = Movie.objects.all()
-
-        # Get all ratings of the user
-        user_ratings = Rating.objects.filter(user=user)
-
-        # Get unrated movies
-        unrated_movies = movies.exclude(rating__in=user_ratings)
-
-        return unrated_movies
-     
     def generate_matrix(self): 
         # Create a matrix of users and movies
         matrix = np.zeros((self.users.last().id+1, self.movies.last().id+1))
@@ -38,14 +28,34 @@ class Recommender:
             user_ratings = self.get_rated_movies(user)
             for rating in user_ratings:
                 matrix[user.id][rating.movie.id] = rating.rating
-
+        
         return matrix
 
 
+    def get_matrix(self):
+        if self.matrix_cached:
+            matrix = cache.get('matrix')
+            return matrix
+        else:
+            matrix = self.generate_matrix()
+            cache.set('matrix', matrix)
+            self.matrix_cached = True
+            return matrix
+        
+    
+    def check_cache(self, key):
+        return True if cache.get(key) else False
+
+
 class UserBasedRecommender(Recommender):
-    # Oriented towards the user
-    def find_k_nearest_neighbors(self, matrix, user, k):
-        # Find the user's row
+
+    
+    def __init__(self):
+        super().__init__()
+        self.neighbors_cached = self.check_cache('neighbors')
+
+
+    def caclulate_similarity(self, matrix, user):
         user_index = user.id    
         user_row = matrix[user_index]
 
@@ -58,6 +68,13 @@ class UserBasedRecommender(Recommender):
             similarity = round(np.sum((user_row - other_row) ** 2)/len(user_row), 2)
             similarities.append((i, similarity))
 
+        return similarities
+    
+
+    # Oriented towards the user
+    def find_k_nearest_neighbors(self, matrix, user, k):
+        # Find the user's row
+        similarities = self.caclulate_similarity(matrix, user)
 
         print("Similarities: ", similarities)
 
@@ -66,6 +83,19 @@ class UserBasedRecommender(Recommender):
         neighbors = similarities[:k]
 
         return neighbors
+    
+    
+    def get_neighbours(self, matrix, user, k):
+        if self.neighbors_cached:
+            neighbors = cache.get('neighbors')
+            return neighbors
+        else:
+            neighbors = self.find_k_nearest_neighbors(matrix, user, k)
+            cache.set('neighbors', neighbors)
+            self.neighbors_cached = True
+            return neighbors
+
+    
 
     # find Aggregate rating of unrated items
     def find_aggregate_ratings(self, matrix, user, k):
@@ -127,7 +157,7 @@ class UserBasedRecommender(Recommender):
 
     def knn_users_recommend_movies(self, user, n):
         # Generate the matrix
-        matrix = self.generate_matrix()
+        matrix = self.get_matrix()
         print("Matrix: ", matrix)
 
         # Find the aggregate ratings
@@ -155,8 +185,12 @@ class UserBasedRecommender(Recommender):
 
 class MovieBasedRecommender(Recommender):
 
-    def find_k_nearest_neighbors(self, matrix, movie, k):
-        # Find the movie's column
+    def __init__(self):
+        super().__init__()
+        self.neighbors_cached = self.check_cache('neighbors')
+
+    
+    def calculate_similarity(self, matrix, movie):
         movie_index = movie.id
         movie_column = matrix[:, movie_index]
 
@@ -169,13 +203,29 @@ class MovieBasedRecommender(Recommender):
             similarity = round(np.sum((movie_column - other_column) ** 2)/len(movie_column), 2)
             similarities.append((i, similarity))
 
-        print("Similarities: ", similarities)
+        return similarities
+    
+
+    def find_k_nearest_neighbors(self, matrix, movie, k):
+
+        similarities = self.calculate_similarity(matrix, movie)
 
         # Sort the similarities and get the index of top k
         similarities.sort(key=lambda x: x[1])
         neighbors = similarities[:k]
 
         return neighbors
+    
+
+    def get_neighbours(self, matrix, movie, k):
+        if self.neighbors_cached:
+            neighbors = cache.get('neighbors')
+            return neighbors
+        else:
+            neighbors = self.find_k_nearest_neighbors(matrix, movie, k)
+            cache.set('neighbors', neighbors)
+            self.neighbors_cached = True
+            return neighbors
     
 
     def find_aggregate_ratings_weighted_sum(self, matrix, movie, k):
