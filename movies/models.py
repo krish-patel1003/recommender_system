@@ -9,14 +9,14 @@ class Actor(models.Model):
     age = models.IntegerField()
 
     def __str__(self):
-        return self.name
+        return f"{self.id} - {self.name}"
 
 
 class Tag(models.Model):
     name = models.CharField(max_length=100, unique=True)
 
     def __str__(self):
-        return self.name
+        return f"{self.id} - {self.name}"
 
 
 class Movie(models.Model):
@@ -28,7 +28,7 @@ class Movie(models.Model):
     objects = MovieModelManager()
 
     def __str__(self):
-        return self.title
+        return f"{self.id} - {self.title}"
     
     def get_tags(self):
         return ', '.join([tag.name for tag in self.tags.all()])

@@ -14,22 +14,40 @@ from movies.utils import user_based_recommender_utils, movie_based_recommender_u
 class ActorViewSet(viewsets.ModelViewSet):
     queryset = Actor.objects.all()
     serializer_class = ActorSerializer
-    # permission_classes = [IsAuthenticated, IsRecommenderSystemAdmin]
-    # authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated, IsRecommenderSystemAdmin]
+    authentication_classes = [TokenAuthentication]
 
 
 class TagViewSet(viewsets.ModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
-    # permission_classes = [IsAuthenticated, IsRecommenderSystemAdmin]
-    # authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated, IsRecommenderSystemAdmin]
+    authentication_classes = [TokenAuthentication]
 
 
-class MovieViewSet(viewsets.ModelViewSet):
+class MovieViewSet(viewsets.ViewSet):
     queryset = Movie.objects.all()
     serializer_class = MovieSerializer
-    permission_classes = [IsAuthenticated,]
+    permission_classes = [IsAuthenticated, IsRecommenderSystemAdmin]
     authentication_classes = [TokenAuthentication]
+
+    def destroy(self, request, pk=None):
+        instance = self.queryset.get(pk=pk)
+        instance.delete()
+        return Response({'message': 'Movie has been deleted'}, status=status.HTTP_200_OK)
+
+    def partial_update(self, request, pk=None):
+        instance = self.queryset.get(pk=pk)
+        serializer = self.serializer_class(instance, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.queryset.get(pk=kwargs['pk'])
+        serializer = self.serializer_class(instance)
+        return Response(serializer.data)    
 
     @action(detail=False, methods=['GET'])
     def knnusers(self, request, *args, **kwargs):
@@ -49,5 +67,5 @@ class MovieViewSet(viewsets.ModelViewSet):
 class RatingViewSet(viewsets.ModelViewSet):
     queryset = Rating.objects.all()
     serializer_class = RatingSerializer
-    # permission_classes = [IsAuthenticated]
-    # authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [TokenAuthentication]

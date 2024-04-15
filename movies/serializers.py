@@ -25,6 +25,7 @@ class MovieSerializer(serializers.ModelSerializer):
         fields = '__all__'
     
     def create(self, validated_data):
+        print("Create method called")
         actors_data = validated_data.pop('actors')
         tags_data = validated_data.pop('tags')
         movie = Movie.objects.create(**validated_data)
@@ -32,6 +33,7 @@ class MovieSerializer(serializers.ModelSerializer):
             actor, created = Actor.objects.get_or_create(**actor_data)
             movie.actors.add(actor)
         for tag_data in tags_data:
+            print(tag_data)
             tag, created = Tag.objects.get_or_create(**tag_data)
             movie.tags.add(tag)
         return movie
