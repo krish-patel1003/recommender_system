@@ -44,7 +44,9 @@ class Recommender:
         
     
     def check_cache(self, key):
-        return True if cache.get(key) else False
+        if cache.get(key) is not None:
+            return True
+        return False
 
 
 class UserBasedRecommender(Recommender):

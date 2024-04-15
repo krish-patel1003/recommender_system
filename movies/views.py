@@ -25,30 +25,45 @@ class TagViewSet(viewsets.ModelViewSet):
     authentication_classes = [TokenAuthentication]
 
 
-class MovieViewSet(viewsets.ViewSet):
+class MovieViewSet(viewsets.ModelViewSet):
     queryset = Movie.objects.all()
     serializer_class = MovieSerializer
     permission_classes = [IsAuthenticated, IsRecommenderSystemAdmin]
     authentication_classes = [TokenAuthentication]
 
     def destroy(self, request, pk=None):
-        instance = self.queryset.get(pk=pk)
-        instance.delete()
-        return Response({'message': 'Movie has been deleted'}, status=status.HTTP_200_OK)
+        try:
+            instance = self.queryset.get(pk=pk)
+            instance.delete()
+            return Response({'message': 'Movie has been deleted'}, status=status.HTTP_204_NO_CONTENT)
+        
+        except Movie.DoesNotExist:
+            return Response({'message': 'Movie not found'}, status=status.HTTP_404_NOT_FOUND)
 
     def partial_update(self, request, pk=None):
-        instance = self.queryset.get(pk=pk)
-        serializer = self.serializer_class(instance, data=request.data, partial=True)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data)
+
+        try:
+            instance = self.queryset.get(pk=pk)
+            serializer = self.serializer_class(instance, data=request.data, partial=True)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data)
+        
+        except Movie.DoesNotExist:
+            return Response({'message': 'Movie not found'}, status=status.HTTP_404_NOT_FOUND)
 
 
     def retrieve(self, request, *args, **kwargs):
-        instance = self.queryset.get(pk=kwargs['pk'])
-        serializer = self.serializer_class(instance)
-        return Response(serializer.data)    
+        
+        try:
+            instance = self.queryset.get(pk=kwargs['pk'])
+            serializer = self.serializer_class(instance)
+            return Response(serializer.data)    
 
+        except Movie.DoesNotExist:
+            return Response({'message': 'Movie not found'}, status=status.HTTP_404_NOT_FOUND)
+    
+        
     @action(detail=False, methods=['GET'])
     def knnusers(self, request, *args, **kwargs):
         user = request.user

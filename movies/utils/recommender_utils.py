@@ -17,7 +17,7 @@ class Recommender:
 
         return user_ratings
 
-def generate_matrix(self): 
+    def generate_matrix(self): 
         # Create a matrix of users and movies
         matrix = np.zeros((self.users.last().id+1, self.movies.last().id+1))
 
